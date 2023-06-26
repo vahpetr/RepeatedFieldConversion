@@ -24,7 +24,7 @@ public class AppContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        _ = builder.Entity<MyEntity>(b =>
+        builder.Entity<MyEntity>(b =>
         {
             b.Property(p => p.Tags)
                 .HasPostgresArrayConversion<RepeatedField<string>, string[]>(
