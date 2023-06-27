@@ -27,7 +27,7 @@ public class AppContext : DbContext
         builder.Entity<MyEntity>(b =>
         {
             b.Property(p => p.Tags)
-                .HasPostgresArrayConversion<RepeatedField<string>, string[]>(
+                .HasPostgresArrayConversion(
                     p => p.ToArray(),
                     arr => MyRepeatedFieldExtensions.FromArray(arr)
                 );
@@ -56,7 +56,7 @@ public static class MyNpgsqlPropertyBuilderExtensions
             Expression<Func<TElementProvider, TElementProperty>> convertFromProviderExpression
         )
         => propertyBuilder.HasConversion(
-            new NpgsqlArrayConverter<TElementProperty, TElementProvider[]>(
+            new NpgsqlArrayConverter<TElementProperty, TElementProvider>(
                 new ValueConverter<TElementProperty, TElementProvider>(
                     convertToProviderExpression,
                     convertFromProviderExpression
