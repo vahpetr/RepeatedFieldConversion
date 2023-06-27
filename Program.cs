@@ -26,9 +26,9 @@ public class AppContext : DbContext
         {
             b.Property(p => p.Tags)
             .HasConversion(
-                new NpgsqlArrayConverter<RepeatedField<string>, string>(
+                new NpgsqlArrayConverter<RepeatedField<string>, string[]>(
                     new ValueConverter<RepeatedField<string>, string[]>(
-                        rp => rp.ToArray(),
+                        rf => rf.ToArray(),
                         values => MyRepeatedFieldExtensions.FromCollection(values)
                     )
                 )
