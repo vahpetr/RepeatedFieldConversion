@@ -1,7 +1,5 @@
-﻿using System.Linq.Expressions;
-using Google.Protobuf.Collections;
+﻿using Google.Protobuf.Collections;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Logging;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Storage.ValueConversion;
@@ -26,10 +24,16 @@ public class AppContext : DbContext
     {
         builder.Entity<MyEntity>(b =>
         {
-            b.Property(p => p.Tags).HasPostgresArrayConversion(
-                p => p.ToArray(),
-                arr => MyRepeatedFieldExtensions.FromArray(arr)
-            );
+            b.Property(p => p.Tags)
+            .HasConversion(
+                new NpgsqlArrayConverter<RepeatedField<string>, string>(
+                    new ValueConverter<RepeatedField<string>, string[]>(
+                        rp => rp.ToArray(),
+                        values => MyRepeatedFieldExtensions.FromCollection(values)
+                    )
+                )
+            )
+            .HasColumnType("text[]");
         });
     }
 }
@@ -38,30 +42,10 @@ public record MyEntity(int Id, RepeatedField<string> Tags);
 
 public static class MyRepeatedFieldExtensions
 {
-    public static RepeatedField<T> FromArray<T>(IEnumerable<T> arr)
+    public static RepeatedField<T> FromCollection<T>(IEnumerable<T> values)
     {
         var rf = new RepeatedField<T>();
-        rf.AddRange(arr);
+        rf.AddRange(values);
         return rf;
     }
-}
-
-public static class MyNpgsqlPropertyBuilderExtensions
-{
-    public static PropertyBuilder<TElementProperty> HasPostgresArrayConversion<TElementProperty,
-        TElementProvider>(
-        this PropertyBuilder<TElementProperty> propertyBuilder,
-        Expression<Func<TElementProperty, TElementProvider>> convertToProviderExpression,
-        Expression<Func<TElementProvider, TElementProperty>> convertFromProviderExpression,
-        ConverterMappingHints? mappingHints = null
-    )
-        => propertyBuilder.HasConversion(
-            new NpgsqlArrayConverter<TElementProperty, TElementProvider>(
-                new ValueConverter<TElementProperty, TElementProvider>(
-                    convertToProviderExpression,
-                    convertFromProviderExpression,
-                    mappingHints
-                )
-            )
-        );
 }
