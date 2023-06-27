@@ -26,11 +26,10 @@ public class AppContext : DbContext
     {
         builder.Entity<MyEntity>(b =>
         {
-            b.Property(p => p.Tags)
-                .HasPostgresArrayConversion(
-                    p => p.ToArray(),
-                    arr => MyRepeatedFieldExtensions.FromArray(arr)
-                );
+            b.Property(p => p.Tags).HasPostgresArrayConversion(
+                p => p.ToArray(),
+                arr => MyRepeatedFieldExtensions.FromArray(arr)
+            );
         });
     }
 }
@@ -51,15 +50,17 @@ public static class MyNpgsqlPropertyBuilderExtensions
 {
     public static PropertyBuilder<TElementProperty> HasPostgresArrayConversion<TElementProperty,
         TElementProvider>(
-            this PropertyBuilder<TElementProperty> propertyBuilder,
-            Expression<Func<TElementProperty, TElementProvider>> convertToProviderExpression,
-            Expression<Func<TElementProvider, TElementProperty>> convertFromProviderExpression
-        )
+        this PropertyBuilder<TElementProperty> propertyBuilder,
+        Expression<Func<TElementProperty, TElementProvider>> convertToProviderExpression,
+        Expression<Func<TElementProvider, TElementProperty>> convertFromProviderExpression,
+        ConverterMappingHints? mappingHints = null
+    )
         => propertyBuilder.HasConversion(
             new NpgsqlArrayConverter<TElementProperty, TElementProvider>(
                 new ValueConverter<TElementProperty, TElementProvider>(
                     convertToProviderExpression,
-                    convertFromProviderExpression
+                    convertFromProviderExpression,
+                    mappingHints
                 )
             )
         );
